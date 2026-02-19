@@ -38,10 +38,9 @@ def extract_main_part(url: str) -> str:
     if parts[0] == 'www':
         return parts[1] if len(parts) > 1 else parts[0]
     elif parts[0] == 'substack' and len(parts) > 1:
-        # For substack.com URLs, use 'substack' as the name
         return 'substack'
     else:
-        return parts[0]  # Return the main part of the domain
+        return parts[0]
 
 
 def generate_html_file(author_name: str) -> None:
@@ -65,17 +64,12 @@ def generate_html_file(author_name: str) -> None:
     essays_data_with_relative_paths = []
     for essay in essays_data:
         essay_copy = essay.copy()
-        # Convert absolute paths to relative paths
         if 'file_link' in essay_copy and essay_copy['file_link']:
             abs_md_path = os.path.abspath(essay_copy['file_link'])
-            rel_md_path = os.path.relpath(abs_md_path, html_output_dir)
-            essay_copy['file_link'] = rel_md_path.replace('\\', '/')  # Use forward slashes for web
-        
+            essay_copy['file_link'] = os.path.relpath(abs_md_path, html_output_dir).replace('\\', '/')
         if 'html_link' in essay_copy and essay_copy['html_link']:
             abs_html_path = os.path.abspath(essay_copy['html_link'])
-            rel_html_path = os.path.relpath(abs_html_path, html_output_dir)
-            essay_copy['html_link'] = rel_html_path.replace('\\', '/')  # Use forward slashes for web
-        
+            essay_copy['html_link'] = os.path.relpath(abs_html_path, html_output_dir).replace('\\', '/')
         essays_data_with_relative_paths.append(essay_copy)
 
     # Calculate relative path to assets folder
@@ -88,8 +82,6 @@ def generate_html_file(author_name: str) -> None:
     with open(HTML_TEMPLATE, 'r', encoding='utf-8') as file:
         html_template = file.read()
 
-    # Replace asset paths with calculated relative paths
-    # The template uses ../assets/ for both CSS and JS, so replace all occurrences
     html_template = html_template.replace('../assets/', f'{assets_rel_path}/')
 
     # Insert the JSON string into the script tag in the HTML template
@@ -485,7 +477,6 @@ class PremiumSubstackScraper(BaseSubstackScraper):
     ) -> None:
         super().__init__(base_substack_url, md_save_dir, html_save_dir, skip_url_fetch=skip_url_fetch)
 
-        # Use credentials passed directly (from GUI) or fall back to config values
         self.login_email = email or EMAIL
         self.login_password = password or PASSWORD
 
@@ -513,12 +504,10 @@ class PremiumSubstackScraper(BaseSubstackScraper):
 
         self.driver = None
 
-        # Prefer explicit chromedriver path if provided
         if chrome_driver_path and os.path.exists(chrome_driver_path):
             service = ChromeService(executable_path=chrome_driver_path)
             self.driver = webdriver.Chrome(service=service, options=options)
         else:
-            # Selenium Manager path (no webdriver_manager)
             try:
                 self.driver = webdriver.Chrome(options=options)
             except SessionNotCreatedException as se:
@@ -528,7 +517,6 @@ class PremiumSubstackScraper(BaseSubstackScraper):
                     "to a matching chromedriver binary."
                 ) from se
 
-        # Remove navigator.webdriver property to avoid headless/bot detection
         self.driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
             "source": "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
         })
@@ -541,9 +529,6 @@ class PremiumSubstackScraper(BaseSubstackScraper):
         """
         print("Opening Substack login page...")
         self.driver.get("https://substack.com/sign-in")
-        print(f"Current URL: {self.driver.current_url}")
-        
-        # Wait for page to load
         wait = WebDriverWait(self.driver, 10)
         wait.until(EC.presence_of_element_located((By.XPATH, "//a[@class='login-option substack-login__login-option']")))
 
@@ -553,28 +538,21 @@ class PremiumSubstackScraper(BaseSubstackScraper):
         signin_with_password.click()
         sleep(2)
 
-        # Wait for email/password fields
         wait.until(EC.presence_of_element_located((By.NAME, "email")))
-        
-        # Email and password
+
         email = self.driver.find_element(By.NAME, "email")
         password = self.driver.find_element(By.NAME, "password")
         email.clear()
         email.send_keys(self.login_email)
         password.clear()
         password.send_keys(self.login_password)
-
-        # Brief pause before submit to appear more human-like
         sleep(1)
 
-        # Find the submit button and click it.
         submit = self.driver.find_element(By.XPATH, "//*[@id=\"substack-login\"]/div[2]/div[2]/form/button")
         submit.click()
-        
-        # Wait for redirect after login (Substack can take several seconds)
+
         wait_long = WebDriverWait(self.driver, 25)
         try:
-            # Success = no longer on sign-in page (redirected to home or elsewhere)
             wait_long.until(lambda d: "sign-in" not in d.current_url or self._has_visible_login_error(d))
             sleep(2)
         except TimeoutException:
@@ -596,7 +574,6 @@ class PremiumSubstackScraper(BaseSubstackScraper):
                 )
         
         print(f"Login successful! Current URL: {self.driver.current_url}")
-        print("Ready to scrape posts...")
 
     def _has_visible_login_error(self, driver) -> bool:
         """True if the login error message is visible (wrong password etc.)."""
@@ -624,16 +601,14 @@ class PremiumSubstackScraper(BaseSubstackScraper):
             current = self.driver.current_url
             print(f"Current URL after navigation: {current}")
 
-            # If we were sent back to sign-in, session may have dropped
             if "sign-in" in current:
                 raise ValueError(
                     "Browser was redirected to sign-in. Login may have expired or failed. "
                     "Try running again with Headless unchecked."
                 )
 
-            # Detect redirect to Substack home/inbox instead of the requested post.
-            # This happens when Substack intercepts the navigation (e.g. session not fully
-            # established, or the post requires a subscription the account doesn't have).
+            # Detect redirect to home/inbox instead of the requested post — happens when
+            # Substack intercepts the navigation (session not ready, or missing subscription).
             current_path = urlparse(current).path.rstrip('/')
             target_path = urlparse(url).path.rstrip('/')
             _home_paths = ('', '/home', '/inbox', '/feed')
@@ -646,9 +621,8 @@ class PremiumSubstackScraper(BaseSubstackScraper):
                         "doesn't have, or the session hadn't fully established. Try again."
                     )
 
-            # Wait for page to load - check for specific Substack post elements.
-            # Intentionally excludes generic tags (e.g. <article>) that also appear on
-            # the home/inbox page and would cause a false positive.
+            # Wait for post-specific elements; intentionally excludes <article> which
+            # also appears on the home/inbox page and would cause a false positive.
             wait = WebDriverWait(self.driver, 15)
             try:
                 wait.until(lambda driver: (
@@ -656,7 +630,6 @@ class PremiumSubstackScraper(BaseSubstackScraper):
                     len(driver.find_elements(By.CLASS_NAME, "paywall-title")) > 0 or
                     len(driver.find_elements(By.CLASS_NAME, "available-content")) > 0
                 ))
-                print("Page loaded successfully")
             except TimeoutException:
                 print(f"Warning: Timeout waiting for post content at {url}")
                 print(f"Current page title: {self.driver.title}")
