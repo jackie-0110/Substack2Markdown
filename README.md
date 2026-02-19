@@ -42,19 +42,26 @@ PASSWORD = "your-password"
 
 ### GUI Application (Recommended)
 
-For a user-friendly graphical interface, run:
-
 ```bash
 python substack_gui.py
 ```
 
-The GUI provides:
-- Easy-to-use form with all options
-- Real-time output/logging
-- File browser for selecting directories
-- No command-line knowledge required
+All options are available in the GUI — no command-line knowledge needed. Enter your credentials directly in the Credentials panel; they are passed straight to the browser and also saved to `config.py` for future CLI use.
 
-**Packaging:** See `build_instructions.md` for creating DMG (macOS) or EXE (Windows) packages.
+**Fields:**
+
+| Field | Description |
+|-------|-------------|
+| Base URL | Scrape all posts from a publication (e.g. `https://author.substack.com`) |
+| Single Post URL | Scrape one post by URL — paste from your browser address bar |
+| Number of Posts | `0` = all posts; any other number stops after N posts |
+| Premium (login) | Opens Chrome to log in before scraping; required for paid posts |
+| Headless | Runs Chrome in the background (no visible window); may fail on some Substacks that show a captcha — uncheck if login fails |
+| Markdown / HTML dirs | Where to save output files |
+| Chrome / ChromeDriver | Optional paths if Selenium Manager can't auto-download the driver |
+| User-Agent | Override the browser user agent; can help if you're being blocked |
+
+**Pre-built apps:** See `build_instructions.md` (gitignored, maintainers only) for building a `.dmg` (macOS) or `.exe` (Windows) with PyInstaller.
 
 ### Command Line Interface
 
@@ -194,9 +201,11 @@ python substack_scraper.py --url https://example.substack.com \
 
 ## Troubleshooting
 
-- **Driver/browser mismatch:** Update Chrome, then `pip install -U selenium`. Or install a matching `chromedriver` and pass `--chrome-driver-path`.
-- **Login fails / captcha:** Run without `--headless` once so you can complete login/captcha; or try `--user-agent`.
-- **Single post from Substack home:** Use `--single-post` with the full URL (e.g. `https://substack.com/home/post/p-...`) and `--premium` if it’s paid.
+- **Driver/browser mismatch:** Update Chrome, then `pip install -U selenium`. Or install a matching `chromedriver` (e.g. `brew install chromedriver`) and pass `--chrome-driver-path`.
+- **Login fails in headless mode:** Substack sometimes blocks headless Chrome with a captcha. Uncheck "Headless" (or drop `--headless`) to run with a visible browser. If that works but headless still doesn't, try passing a realistic `--user-agent`.
+- **"Redirected to home instead of the post":** The scraper detected that Substack sent the browser to the inbox instead of the article. This usually means the post requires a subscription the logged-in account doesn't have, or the session hadn't fully settled — try running again.
+- **Single post from Substack home:** Use `--single-post` (or the Single Post URL field in the GUI) with the full URL (e.g. `https://substack.com/home/post/p-...`) and enable premium/login if it's a paid post.
+- **Post content is empty or wrong:** Make sure you're using the exact URL from your browser address bar, not a shortened or redirect link.
 
 ## License
 
