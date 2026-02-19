@@ -17,13 +17,17 @@ function sortEssaysByLikes(data) {
 }
 function populateEssays(data) {
     const essaysContainer = document.getElementById('essays-container');
-    const list = data.map(essay => `
+    const list = data.map(essay => {
+        // Use the relative path directly (already converted in Python)
+        const linkPath = showHTML ? essay.html_link : essay.file_link;
+        return `
         <li>
-            <a href="../${showHTML ? essay.html_link : essay.file_link}" target="_blank">${essay.title}</a>
+            <a href="${linkPath}" target="_blank">${essay.title}</a>
             <div class="subtitle">${essay.subtitle}</div>
             <div class="metadata">${essay.like_count} Likes - ${essay.date}</div>
         </li>
-    `).join('');
+    `;
+    }).join('');
     essaysContainer.innerHTML = `<ul>${list}</ul>`;
 }
 

@@ -1,22 +1,67 @@
-# Ignore Python-related files
+# Credentials and local config (never commit)
 config.py
-setup.py
-**/__pycache__/
 
-# Ignore virtual environment directories
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
 venv/
+.venv/
+env/
+.env/
 
-# Ignore editor/IDE configuration files
+# IDE / editor
 .idea/
 .vscode/
+*.swp
+*.swo
+*~
 
-# Ignore all files in data/ except README.md
-data/
-!data/README.md
+# OS
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
 
-# Ignore all files in substack_html_pages/ except README.md
+# Scraper output (keep directory READMEs)
+substack_md_files/
 substack_html_pages/*
 !substack_html_pages/README.md
+data/*
+!data/README.md
 
-# Ignore substack_md_files directory
-/substack_md_files/
+# PyInstaller / packaging
+*.manifest
+*.spec
+*.dmg
+*.exe
+
+# Logs and temp
+*.log
+*.tmp
+.cache/
+
+# Selenium / Chrome (local driver downloads)
+chromedriver
+chromedriver.exe
+.geckodriver*

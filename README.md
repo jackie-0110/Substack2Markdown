@@ -1,96 +1,203 @@
-﻿# Substack2Markdown
+# Substack2Markdown (Chrome + Mac fork)
 
-Substack2Markdown is a Python tool for downloading free and premium Substack posts and saving them as both Markdown and 
-HTML files, and includes a simple HTML interface to browse and sort through the posts. It will save paid for content as 
-long as you're subscribed to that substack. 
+A **Chrome-based, Mac-compatible** fork of Substack2Markdown. This Python tool downloads free and premium Substack posts and saves them as Markdown and HTML, with a simple HTML interface to browse and sort posts. Paid content is saved when you're subscribed to that Substack.
 
-🆕 @Firevvork has built a web version of this tool at [Substack Reader](https://www.substacktools.com/reader) - no 
-installation required! (Works for free Substacks only.)
+**This fork uses Google Chrome and Selenium’s built-in driver management**, so it works on macOS (Intel and Apple Silicon) without Edge or webdriver_manager.
 
-
-![Substack2Markdown Interface](./assets/images/screenshot.png)
-
-Once you run the script, it will create a folder named after the substack in `/substack_md_files`,
-and then begin to scrape the substack URL, converting the blog posts into markdown files. Once all the posts have been
-saved, it will generate an HTML file in `/substack_html_pages` directory that allows you to browse the posts.
-
-You can either hardcode the substack URL and the number of posts you'd like to save into the top of the file, or 
-specify them as command line arguments.
+🆕 [Substack Reader](https://www.substacktools.com/reader) — web version for free Substacks only (by @Firevvork).
 
 ## Features
 
-- Converts Substack posts into Markdown files.
-- Generates an HTML file to browse Markdown files.
-- Supports free and premium content (with subscription).
-- The HTML interface allows sorting essays by date or likes.
+- Converts Substack posts to Markdown (and HTML).
+- Generates an HTML author page to browse and sort posts by date or likes.
+- Supports **free** and **premium** content (with your subscription).
+- **Chrome + Mac**: uses Chrome and Selenium Manager; optional `chromedriver` path for locked-down networks.
 
 ## Installation
 
-Clone the repo and install the dependencies:
+**Requirements:** Python 3.x, Google Chrome.
 
 ```bash
-git clone https://github.com/yourusername/substack_scraper.git
-cd substack_scraper
+git clone https://github.com/yourusername/Substack2Markdown.git
+cd Substack2Markdown
 
-# # Optinally create a virtual environment
+# Optional: virtual environment
 # python -m venv venv
-# # Activate the virtual environment
-# .\venv\Scripts\activate  # Windows
-# source venv/bin/activate  # Linux
+# source venv/bin/activate   # Mac/Linux
+# .\venv\Scripts\activate   # Windows
 
 pip install -r requirements.txt
 ```
 
-For the premium scraper, update the `config.py` in the root directory with your Substack email and password:
+For the **premium scraper**, set your Substack credentials in `config.py`:
 
 ```python
-EMAIL = "your-email@domain.com"
+EMAIL = "your-email@example.com"
 PASSWORD = "your-password"
 ```
 
-You'll also need Microsoft Edge installed for the Selenium webdriver.
+**Chrome:** Use your normal Chrome install. Selenium will use Selenium Manager to fetch a matching driver. If your network blocks that, install `chromedriver` (e.g. `brew install chromedriver`) and pass `--chrome-driver-path` (see below).
 
 ## Usage
 
-Specify the Substack URL and the directory to save the posts to:
+### GUI Application (Recommended)
 
-You can hardcode your desired Substack URL and the number of posts you'd like to save into the top of the file and run:
+For a user-friendly graphical interface, run:
+
+```bash
+python substack_gui.py
+```
+
+The GUI provides:
+- Easy-to-use form with all options
+- Real-time output/logging
+- File browser for selecting directories
+- No command-line knowledge required
+
+**Packaging:** See `build_instructions.md` for creating DMG (macOS) or EXE (Windows) packages.
+
+### Command Line Interface
+
+### Quick start
+
+**Hardcoded config:** Set `BASE_SUBSTACK_URL`, `NUM_POSTS_TO_SCRAPE`, and optionally `USE_PREMIUM` at the top of `substack_scraper.py`, then:
+
 ```bash
 python substack_scraper.py
 ```
 
-For free Substack sites:
+**Free Substack (no login):**
 
 ```bash
-python substack_scraper.py --url https://example.substack.com --directory /path/to/save/posts
+python substack_scraper.py --url https://example.substack.com --directory ./substack_md_files
 ```
 
-For premium Substack sites:
+**Premium Substack (login in Chrome):**
 
 ```bash
-python substack_scraper.py --url https://example.substack.com --directory /path/to/save/posts --premium
+python substack_scraper.py --url https://example.substack.com --directory ./substack_md_files --premium
 ```
 
-To scrape a specific number of posts:
+---
+
+## Common use cases
+
+### 1. Scrape a **single post** (e.g. from Substack home)
+
+Useful for one article (including paid) from your Substack home or a direct link.
 
 ```bash
-python substack_scraper.py --url https://example.substack.com --directory /path/to/save/posts --number 5
+python substack_scraper.py --premium --single-post "https://substack.com/home/post/p-182828153"
 ```
 
-### Online Version
+Public single post (no login):
 
-For a hassle-free experience without any local setup:
+```bash
+python substack_scraper.py --single-post "https://author.substack.com/p/post-slug"
+```
 
-1. Visit [Substack Reader](https://www.substacktools.com/reader)
-2. Enter the Substack URL you want to read or export
-3. Click "Go" to instantly view the content or "Export" to download Markdown files
+### 2. Limit how many posts to scrape
 
-This online version provides a user-friendly web interface for reading and exporting free Substack articles, with no installation required. However, please note that the online version currently does not support exporting premium content. For full functionality, including premium content export, please use the local script as described above. Built by @Firevvork. 
+Scrape only the first N posts (from sitemap/feed order):
 
-## Viewing Markdown Files in Browser
+```bash
+python substack_scraper.py --url https://example.substack.com --number 10
+python substack_scraper.py --url https://example.substack.com --premium --number 5
+```
 
-To read the Markdown files in your browser, install the [Markdown Viewer](https://chromewebstore.google.com/detail/markdown-viewer/ckkdlimhmcjmikdlpkmbgfkaikojcbjk)
-browser extension. But note, we also save the files as HTML for easy viewing, 
-just set the toggle to HTML on the author homepage. 
+### 3. Run premium scraper **headless** (no visible browser)
 
-Or you can use our [Substack Reader](https://www.substacktools.com/reader) online tool, which allows you to read and export free Substack articles directly in your browser. (Note: Premium content export is currently only available in the local script version)
+```bash
+python substack_scraper.py --url https://example.substack.com --premium --headless
+```
+
+### 4. Custom **markdown** and **HTML** directories
+
+```bash
+python substack_scraper.py --url https://example.substack.com \
+  --directory ./my_md_posts \
+  --html-directory ./my_html_pages
+```
+
+### 5. Specify **Chrome** or **ChromeDriver** (Mac / locked-down networks)
+
+Use a specific Chrome binary:
+
+```bash
+python substack_scraper.py --url https://example.substack.com --premium \
+  --chrome-path "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+```
+
+Use a local `chromedriver` (e.g. from Homebrew):
+
+```bash
+# Apple Silicon
+python substack_scraper.py --url https://example.substack.com --premium \
+  --chrome-driver-path /opt/homebrew/bin/chromedriver
+
+# Intel Mac
+python substack_scraper.py --url https://example.substack.com --premium \
+  --chrome-driver-path /usr/local/bin/chromedriver
+```
+
+Find your chromedriver: `which chromedriver`
+
+### 6. Custom **user agent** (e.g. to help with captcha/blocking)
+
+```bash
+python substack_scraper.py --url https://example.substack.com --premium \
+  --user-agent "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36..."
+```
+
+### 7. Full combination example
+
+Single paid post, headless, custom directories, local chromedriver:
+
+```bash
+python substack_scraper.py --premium --headless \
+  --single-post "https://substack.com/home/post/p-182828153" \
+  --directory ./posts --html-directory ./pages \
+  --chrome-driver-path /opt/homebrew/bin/chromedriver
+```
+
+### 8. Free Substack, custom dirs, last 20 posts
+
+```bash
+python substack_scraper.py --url https://example.substack.com \
+  --directory ./substack_md_files --html-directory ./substack_html_pages \
+  --number 20
+```
+
+---
+
+## All CLI options
+
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--url` | `-u` | Base Substack URL (e.g. `https://author.substack.com`). |
+| `--directory` | `-d` | Directory for Markdown files (default: `substack_md_files`). |
+| `--html-directory` | | Directory for HTML files (default: `substack_html_pages`). |
+| `--number` | `-n` | Max number of posts to scrape (0 = all). |
+| `--premium` | `-p` | Use Chrome + login to scrape paid posts. |
+| `--headless` | | Run Chrome headless (premium only). |
+| `--single-post` | | Scrape one post by URL (works with `--url` or `--single-post`). |
+| `--chrome-path` | | Path to Chrome executable. |
+| `--chrome-driver-path` | | Path to `chromedriver` binary. |
+| `--user-agent` | | Custom User-Agent string. |
+
+---
+
+## Viewing output
+
+- **HTML:** Open the author page in `substack_html_pages/<writer_name>/` (or your `--html-directory`). Toggle to HTML in the interface to view rendered posts.
+- **Markdown:** Use a [Markdown Viewer](https://chromewebstore.google.com/detail/markdown-viewer/ckkdlimhmcjmikdlpkmbgfkaikojcbjk) extension, or the [Substack Reader](https://www.substacktools.com/reader) for free Substacks.
+
+## Troubleshooting
+
+- **Driver/browser mismatch:** Update Chrome, then `pip install -U selenium`. Or install a matching `chromedriver` and pass `--chrome-driver-path`.
+- **Login fails / captcha:** Run without `--headless` once so you can complete login/captcha; or try `--user-agent`.
+- **Single post from Substack home:** Use `--single-post` with the full URL (e.g. `https://substack.com/home/post/p-...`) and `--premium` if it’s paid.
+
+## License
+
+Same as the original project (see LICENSE).
